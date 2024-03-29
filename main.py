@@ -2,9 +2,27 @@ from tkinter import *
 from tkinter import messagebox
 import random
 import pyperclip
+import json
+
+
+# ---------------------------- SEARCH ENTRIES ------------------------------- #
+def find_password():
+    website_name = website_input.get()
+
+    try:
+        # Read the JSON file as shown below
+        with open("data.json", mode='r') as file:
+            # data_check is turned into a dictionary by Python
+            data_check = json.load(file)
+            if website_name in data_check:
+                messagebox.showinfo(title=website_name, message=f"Email: {data_check[website_name]["username"]}\nPassword: {data_check[website_name]["password"]}")
+            else:
+                messagebox.showerror(title="Warning", message=f"No details for '{website_name}' exists")
+    except FileNotFoundError:
+        messagebox.showerror(title="Warning", message="No data file exists")
+
 
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
-
 
 def generate_password():
     password_input.delete(0, END)
@@ -39,20 +57,49 @@ def write_to_file():
     website_name = website_input.get()
     email_username = email_input.get()
     password = password_input.get()
-    # the below message box will be saved as a boolean 'True' or 'False'
+    # We will create a new empty nested dictionary called "new_data"
+    new_data = {
+        website_name:{
+            "username": email_username,
+            "password": password,
+        }
+    }
+
 
     if len(website_name) == 0 or len(email_username) == 0 or len(password) == 0:
         error_msg = messagebox.showerror(title='Error!', message="Please fill in all the details! No empty fields")
     else:
+        # the below message box will be saved as a boolean 'True' or 'False'
         is_ok = messagebox.askokcancel(title=website_name, message="Do you wish to save these credentials?")
         if is_ok is True:
-            with open("data.txt", mode='a') as file:
-                file.write(f"{website_name} | {email_username} | {password} \n")
+            # with open("data.txt", mode='a') as file:
+            #     file.write(f"{website_name} | {email_username} | {password} \n")
+            ## Instead of writing to a text file as above, we will write to a JSON file as below
+            try:
+                with open("data.json", mode='r') as file:
+                #The most important inputs are the objects you want to dump and the file you want to dump it to
+                # we will dump the "new_data" dictionary into the JSON file, fist input is the empty dict we want to dump to and the second input is the data file we want to put it inot called "file"
+                # The "indent" is to make the JSON file more readable
+                # json.dump(new_data, file, indent=4)
+                # To read from a JSON file we use 'json.load(pass in the file name or path = 'file')
+                # We also need to change the 'with open("data.json", mode='r') as file:'
+                # This new loaded data will be stored in a variable called 'data' (which is a dictionary)
+                    data = json.load(file)  # Save this file to variable 'data' which converts it into a dictionary
+                    data.update(new_data)  # Updating the dictionary variable with new inputed data
+            except FileNotFoundError:
+                # An error usually occurs if the json file is empty, so we need to first write to it then this 'except' error won't occur and it'll execute the 'try' cmd
+                with open("data.json", mode='w') as file:
+                    json.dump(new_data, file, indent=4)
 
-            website_input.delete(0, END)
-            email_input.delete(0, END)
-            email_input.insert(0, "abc@abc.com")
-            password_input.delete(0, END)
+            else:
+                with open("data.json", mode='w') as file:
+                    json.dump(data, file, indent=4)  # saving updated data
+
+            finally:
+                website_input.delete(0, END)
+                email_input.delete(0, END)
+                email_input.insert(0, "abc@abc.com")
+                password_input.delete(0, END)
 
 
 # ---------------------------- UI SETUP ------------------------------- #
@@ -76,10 +123,12 @@ email_label.grid(column=0, row=2)
 password_label = Label(text="Password:", font=("Arial", 10))
 password_label.grid(column=0, row=3)
 
-website_input = Entry(width=51)
+website_input = Entry(width=32)
 website_input.focus()
-website_input.grid(column=1, row=1, columnspan=2)
+website_input.grid(column=1, row=1)
 
+search_button = Button(text="Search Database", width=17, font=("Arial", 8), command=find_password)
+search_button.grid(column=2, row=1)
 
 email_input = Entry(width=51)
 email_input.insert(0,"abc@abc.com")
