@@ -49,7 +49,7 @@ def generate_password():
 
     password_input.insert(0, password)
     pyperclip.copy(password)
-    print(f"Your password is: {password}")
+    # print(f"Your password is: {password}")
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 
 
